@@ -1,0 +1,31 @@
+artifact_path: file:///home/aifi/walmart-mlops/mlruns/0/models/m-aaac5fce6b6e4136ba6cafae690fbedc/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.11
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.0
+is_signature_from_type_hint: false
+mlflow_version: 3.1.1
+model_id: m-aaac5fce6b6e4136ba6cafae690fbedc
+model_size_bytes: 7324906
+model_uuid: m-aaac5fce6b6e4136ba6cafae690fbedc
+prompts: null
+run_id: e4bb68d2737b48a2bab860b58248d52d
+signature:
+  inputs: '[{"type": "long", "name": "storenum", "required": true}, {"type": "double",
+    "name": "LAT", "required": true}, {"type": "double", "name": "LON", "required":
+    true}, {"type": "long", "name": "MONTH", "required": true}, {"type": "long", "name":
+    "DAY", "required": true}, {"type": "long", "name": "YEAR", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "int64", "shape": [-1]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-06-30 11:25:49.040909'

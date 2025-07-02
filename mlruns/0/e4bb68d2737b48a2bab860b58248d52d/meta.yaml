@@ -1,0 +1,14 @@
+artifact_uri: file:///home/aifi/walmart-mlops/mlruns/0/e4bb68d2737b48a2bab860b58248d52d/artifacts
+end_time: 1751282750809
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: e4bb68d2737b48a2bab860b58248d52d
+run_name: thundering-goat-660
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751282749030
+status: 3
+tags: []
+user_id: aifi

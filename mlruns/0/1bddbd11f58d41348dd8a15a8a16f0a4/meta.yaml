@@ -1,0 +1,14 @@
+artifact_uri: file:///home/aifi/walmart-mlops/mlruns/0/1bddbd11f58d41348dd8a15a8a16f0a4/artifacts
+end_time: 1751282056201
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 1bddbd11f58d41348dd8a15a8a16f0a4
+run_name: sneaky-flea-878
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751282054450
+status: 3
+tags: []
+user_id: aifi

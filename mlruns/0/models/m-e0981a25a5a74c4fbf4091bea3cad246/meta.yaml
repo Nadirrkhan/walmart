@@ -1,0 +1,10 @@
+artifact_location: file:///home/aifi/walmart-mlops/mlruns/0/models/m-e0981a25a5a74c4fbf4091bea3cad246/artifacts
+creation_timestamp: 1751367034959
+experiment_id: '0'
+last_updated_timestamp: 1751367036683
+model_id: m-e0981a25a5a74c4fbf4091bea3cad246
+model_type: null
+name: model
+source_run_id: 80a5eb69d4904e248113719dc2b32f87
+status: 2
+status_message: null
