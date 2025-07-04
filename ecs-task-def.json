@@ -1,0 +1,33 @@
+{
+  "family": "walmart-task",
+  "executionRoleArn": "arn:aws:iam::644020601055:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::644020601055:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "walmart-container",
+      "image": "<IMAGE_PLACEHOLDER>",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "hostPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "MODEL_NAME",
+          "value": "walmart-supercenter-model"
+        },
+        {
+          "name": "MODEL_STAGE",
+          "value": "Production"
+        }
+      ]
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512"
+}

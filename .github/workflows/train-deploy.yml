@@ -1,81 +1,45 @@
-name: Train and Deploy to AWS ECS
-
-on:
-  push:
-    branches:
-      - main
-
-env:
-  AWS_REGION: ${{ secrets.AWS_REGION }}
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-  ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME }}
-  ECS_SERVICE_NAME: ${{ secrets.ECS_SERVICE_NAME }}
-  TASK_DEFINITION_FAMILY: ${{ secrets.TASK_DEFINITION_FAMILY }}
-  CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
-
 jobs:
-  train-build-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: 🐍 Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-    - name: 📦 Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install python-dotenv boto3
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
 
-    - name: 🤖 Run ML training script
-      env:
-        MLFLOW_TRACKING_URI: file://${{ github.workspace }}/mlruns
-        MODEL_NAME: walmart-supercenter-model
-      run: python train.py
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: 644020601055.dkr.ecr.us-east-1.amazonaws.com
+          ECR_REPOSITORY: walmart-fastapi
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: 🔐 Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+      - name: Replace image tag in ECS task definition
+        run: |
+          sed -i 's|<IMAGE_PLACEHOLDER>|644020601055.dkr.ecr.us-east-1.amazonaws.com/walmart-fastapi:${{ github.sha }}|g' ecs-task-def.json
 
-    - name: 🔐 Login to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
+      - name: Register new ECS task definition
+        id: register-task-def
+        run: |
+          aws ecs register-task-definition \
+            --cli-input-json file://ecs-task-def.json > result.json
+          cat result.json
+          echo "::set-output name=task_def_arn::$(jq -r '.taskDefinition.taskDefinitionArn' result.json)"
 
-    - name: 🐳 Build and Push Docker image to ECR with SHA tag
-      env:
-        ECR_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
-
-    - name: 📄 Render new ECS task definition
-      id: render-task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ecs-task-definition.json
-        container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ env.IMAGE_URI }}
-
-    - name: 📦 Register new ECS task definition revision
-      id: register-task-def
-      uses: aws-actions/amazon-ecs-register-task-definition@v1
-      with:
-        task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-
-    - name: 🚀 Deploy updated image to ECS
-      run: |
-        aws ecs update-service \
-          --cluster ${{ env.ECS_CLUSTER_NAME }} \
-          --service ${{ env.ECS_SERVICE_NAME }} \
-          --task-definition ${{ steps.register-task-def.outputs.task-definition-arn }} \
-          --force-new-deployment
+      - name: Update ECS service to use new task definition
+        run: |
+          aws ecs update-service \
+            --cluster walmart-cluster \
+            --service walmart-service \
+            --task-definition ${{ steps.register-task-def.outputs.task_def_arn }} \
+            --force-new-deployment
