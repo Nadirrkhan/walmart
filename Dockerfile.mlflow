@@ -1,11 +1,10 @@
-FROM ghcr.io/mlflow/mlflow:latest
+FROM python:3.9-slim
 
-# Install boto3 and other dependencies
-RUN pip install boto3
+RUN pip install --no-cache-dir \
+    mlflow==2.9.2 \
+    sqlalchemy==2.0.25 \
+    psycopg2-binary
 
-# Set the working directory
-WORKDIR /app
-
-# Expose the necessary ports
 EXPOSE 5000
 
+CMD ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000"]

@@ -1,7 +1,9 @@
 fastapi
 uvicorn
+gunicorn
 mlflow
 scikit-learn
 pandas
+python-dotenv
 boto3
 

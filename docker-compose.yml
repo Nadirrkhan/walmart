@@ -2,30 +2,12 @@ version: "3.8"
 
 services:
   mlflow:
-    build:
-      context: .
-      dockerfile: Dockerfile.mlflow
+    image: python:3.9
     ports:
       - "5000:5000"
     volumes:
-      - ./mlruns:/mlruns
-      - ./mlflow_data:/mlflow_data
-    environment:
-      AWS_ACCESS_KEY_ID: "AKIAZL4U6QDPSW4DWGMQ"
-      AWS_SECRET_ACCESS_KEY: "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"
-      AWS_DEFAULT_REGION: "us-east-1"
-      MLFLOW_S3_ENDPOINT_URL: "https://s3.amazonaws.com"
-    command: >
-      mlflow server
-      --backend-store-uri sqlite:///mlflow_data/mlflow.db
-      --default-artifact-root s3://mlops-testing-1/mlops-1/
-      --host 0.0.0.0
-      --port 5000
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./mlruns:/mlruns  # Stores MLflow data
+    command: mlflow ui --host 0.0.0.0 --port 5000 --backend-store-uri file:///mlruns
 
   fastapi:
     build: .
@@ -33,18 +15,6 @@ services:
       - "8000:8000"
     volumes:
       - ./:/app
-    environment:
-      AWS_ACCESS_KEY_ID: "AKIAZL4U6QDPSW4DWGMQ"
-      AWS_SECRET_ACCESS_KEY: "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"
-      AWS_DEFAULT_REGION: "us-east-1"
-      MLFLOW_S3_ENDPOINT_URL: "https://s3.amazonaws.com"
-      MLFLOW_TRACKING_URI: "http://mlflow:5000"
-    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+      - ./mlruns:/mlruns  # Shares MLflow data
     depends_on:
-      mlflow:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - mlflow

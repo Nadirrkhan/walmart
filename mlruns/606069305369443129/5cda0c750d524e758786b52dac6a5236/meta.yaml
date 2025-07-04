@@ -1,0 +1,14 @@
+artifact_uri: file:///home/aifi/walmart-mlops/mlruns/606069305369443129/5cda0c750d524e758786b52dac6a5236/artifacts
+end_time: 1751533629153
+entry_point_name: ''
+experiment_id: '606069305369443129'
+lifecycle_stage: active
+run_id: 5cda0c750d524e758786b52dac6a5236
+run_name: charming-crow-140
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751533627023
+status: 3
+tags: []
+user_id: aifi

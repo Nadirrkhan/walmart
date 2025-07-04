@@ -1,0 +1,14 @@
+artifact_uri: file:///home/aifi/walmart-mlops/mlruns/606069305369443129/1259746b87534f21a95ad322f9352ed9/artifacts
+end_time: 1751533405945
+entry_point_name: ''
+experiment_id: '606069305369443129'
+lifecycle_stage: active
+run_id: 1259746b87534f21a95ad322f9352ed9
+run_name: selective-yak-105
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751533405716
+status: 4
+tags: []
+user_id: aifi
