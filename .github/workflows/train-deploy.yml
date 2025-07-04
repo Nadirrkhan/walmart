@@ -1,45 +1,80 @@
+name: Train, Build and Deploy to AWS ECS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 644020601055
+  ECR_REPOSITORY: walmart-fastapi
+  ECS_CLUSTER_NAME: walmart-cluster
+  ECS_SERVICE_NAME: walmart-service
+  CONTAINER_NAME: walmart-container
+  IMAGE_TAG: ${{ github.sha }}
+
 jobs:
-  build-and-deploy:
+  train-build-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v1
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install python-dotenv boto3 mlflow
 
-      - name: Build and push Docker image
-        env:
-          ECR_REGISTRY: 644020601055.dkr.ecr.us-east-1.amazonaws.com
-          ECR_REPOSITORY: walmart-fastapi
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    - name: 🤖 Run ML training script
+      run: python train.py
 
-      - name: Replace image tag in ECS task definition
-        run: |
-          sed -i 's|<IMAGE_PLACEHOLDER>|644020601055.dkr.ecr.us-east-1.amazonaws.com/walmart-fastapi:${{ github.sha }}|g' ecs-task-def.json
+    - name: 🔐 Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
-      - name: Register new ECS task definition
-        id: register-task-def
-        run: |
-          aws ecs register-task-definition \
-            --cli-input-json file://ecs-task-def.json > result.json
-          cat result.json
-          echo "::set-output name=task_def_arn::$(jq -r '.taskDefinition.taskDefinitionArn' result.json)"
+    - name: 🔐 Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Update ECS service to use new task definition
-        run: |
-          aws ecs update-service \
-            --cluster walmart-cluster \
-            --service walmart-service \
-            --task-definition ${{ steps.register-task-def.outputs.task_def_arn }} \
-            --force-new-deployment
+    - name: 🐳 Build Docker image
+      env:
+        ECR_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
+      run: |
+        docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
+
+    - name: 🐳 Push Docker image to ECR
+      env:
+        ECR_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
+      run: |
+        docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+
+    - name: 📝 Register new ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-register-task-definition@v1
+      with:
+        family: walmart-task
+        container-name: ${{ env.CONTAINER_NAME }}
+        image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: 🚀 Deploy updated task definition to ECS service
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition-arn }}
+        service: ${{ env.ECS_SERVICE_NAME }}
+        cluster: ${{ env.ECS_CLUSTER_NAME }}
+        wait-for-service-stability: true
+        aws-region: ${{ env.AWS_REGION }}
