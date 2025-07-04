@@ -18,7 +18,7 @@ tracking_uri = os.getenv("MLFLOW_TRACKING_URI", f"file://{mlruns_path.resolve()}
 mlflow.set_tracking_uri(tracking_uri)
 
 # Step 3: Set experiment
-experiment_name = "walmart-mlops"
+experiment_name = "walmart-mlops-v2"
 mlflow.set_experiment(experiment_name)
 
 # Step 4: Check and fix artifact path if it wrongly points to /home/aifi
