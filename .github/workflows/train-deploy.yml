@@ -62,7 +62,8 @@ jobs:
             "portMappings": [{
               "containerPort": 8000,
               "protocol": "tcp"
-            }]
+            }],
+            "memoryReservation": 512
           }]' \
           --region ${{ env.AWS_REGION }} \
           --query 'taskDefinition.taskDefinitionArn' \
