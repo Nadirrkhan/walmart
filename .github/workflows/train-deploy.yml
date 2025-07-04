@@ -26,7 +26,7 @@ jobs:
       with:
         python-version: '3.9'
 
-    - name: 📦 Install dependencies
+    - name: 📦 Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
@@ -50,7 +50,7 @@ jobs:
         docker build -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
         docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
 
-    - name: 📦 Register new ECS task definition
+    - name: 📦 Register ECS Task Definition
       id: register-task
       run: |
         TASK_DEF_ARN=$(aws ecs register-task-definition \
@@ -68,13 +68,13 @@ jobs:
           --region ${{ env.AWS_REGION }} \
           --query 'taskDefinition.taskDefinitionArn' \
           --output text)
+
         echo "task-definition-arn=$TASK_DEF_ARN" >> "$GITHUB_OUTPUT"
 
-    - name: 🚀 Deploy updated task definition to ECS
+    - name: 🚀 Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.register-task.outputs.task-definition-arn }}
         service: ${{ env.ECS_SERVICE_NAME }}
         cluster: ${{ env.ECS_CLUSTER_NAME }}
         wait-for-service-stability: true
-
