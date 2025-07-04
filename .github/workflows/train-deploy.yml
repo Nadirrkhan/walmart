@@ -77,4 +77,4 @@ jobs:
         service: ${{ env.ECS_SERVICE_NAME }}
         cluster: ${{ env.ECS_CLUSTER_NAME }}
         wait-for-service-stability: true
-        aws-region: ${{ env.AWS_REGION }}
+        region: ${{ env.AWS_REGION }}
