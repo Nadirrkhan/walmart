@@ -1,0 +1,20 @@
+{
+  "family": "walmart-task",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "walmart-container",
+      "image": "PLACEHOLDER",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "hostPort": 8000
+        }
+      ]
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512"
+}
