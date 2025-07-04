@@ -68,7 +68,7 @@ jobs:
           --region ${{ env.AWS_REGION }} \
           --query 'taskDefinition.taskDefinitionArn' \
           --output text)
-        echo "task-definition-arn=$TASK_DEF_ARN" >> $GITHUB_OUTPUT
+        echo "task-definition-arn=$TASK_DEF_ARN" >> "$GITHUB_OUTPUT"
 
     - name: 🚀 Deploy updated task definition to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
@@ -77,3 +77,4 @@ jobs:
         service: ${{ env.ECS_SERVICE_NAME }}
         cluster: ${{ env.ECS_CLUSTER_NAME }}
         wait-for-service-stability: true
+
